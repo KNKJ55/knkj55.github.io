@@ -6,7 +6,7 @@
   <link href="http://knkj55.github.io/atom.xml" rel="self"/>
   
   <link href="http://knkj55.github.io/"/>
-  <updated>2024-10-05T03:47:36.910Z</updated>
+  <updated>2024-10-05T09:09:35.983Z</updated>
   <id>http://knkj55.github.io/</id>
   
   <author>
@@ -20,8 +20,8 @@
     <title>Hello World Again!</title>
     <link href="http://knkj55.github.io/2024/10/05/hello-world-again/"/>
     <id>http://knkj55.github.io/2024/10/05/hello-world-again/</id>
-    <published>2024-10-05T03:47:46.590Z</published>
-    <updated>2024-10-05T03:47:36.910Z</updated>
+    <published>2024-10-05T09:09:35.991Z</published>
+    <updated>2024-10-05T09:09:35.983Z</updated>
     
     <content type="html"><![CDATA[<ul><li>说起来有些漫长</li><li>这几个月来都没维护博客</li><li>主要是文件丢了（）</li><li>得，推倒重来吧</li></ul>]]></content>
     
@@ -39,6 +39,10 @@
     
     
     
+    <category term="闲谈" scheme="http://knkj55.github.io/categories/%E9%97%B2%E8%B0%88/"/>
+    
+    
+    <category term="始" scheme="http://knkj55.github.io/tags/%E5%A7%8B/"/>
     
   </entry>
   
