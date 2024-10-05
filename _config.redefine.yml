@@ -245,6 +245,12 @@ home:
       # Categories: 
       #   path: /categories 
       #   icon: fa-regular fa-folder # can be empty
+      相册:
+        icon: fa-solid fa-image
+        path: /masonry
+      友链:
+        icon: fa-solid fa-link
+        path: /links
       # ...... # you can add more
   # Article date format
   article_date_format: auto # auto, relative, YYYY-MM-DD, YYYY-MM-DD HH:mm:ss etc.
@@ -252,11 +258,11 @@ home:
   excerpt_length: 200 # Max length of article excerpt
   # Article categories visibility
   categories:
-    enable: false  # Whether to enable
+    enable: true  # Whether to enable
     limit: 3 # Max number of categories to display
   # Article tags visibility
   tags:
-    enable: false  # Whether to enable
+    enable: true  # Whether to enable
     limit: 3  # Max number of tags to display
 # HOME PAGE ARTICLE SETTINGS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
@@ -380,15 +386,15 @@ comment:
 # Docs: https://redefine-docs.ohevan.com/footer
 footer:
   # Show website running time
-  runtime: true # show website running time or not
+  runtime: false # show website running time or not
   # Icon in footer, write fontawesome icon code here
   icon: '<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>'
   # The start time of the website, format: YYYY/MM/DD HH:mm:ss
-  start: 2022/8/17 11:45:14
+  start: 2024/10/5 11:45:14
   # Site statistics
   statistics: true # show site statistics or not (total articles, total words)
   # Footer message
-  customize:
+  customize: Be yourself.
   # ICP record number. See https://beian.miit.gov.cn/
   icp:
     enable: false # Whether to enable

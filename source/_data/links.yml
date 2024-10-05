@@ -1,0 +1,8 @@
+- links_category: 科网
+  has_thumbnail: false
+  list: 
+  - name: KJ Network
+    link: https://kj-network.github.io
+    description: KJ Network的网站
+    avatar: /images/favicon-kn.png
+    thumbnail: 
