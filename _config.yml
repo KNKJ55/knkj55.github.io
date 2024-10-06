@@ -97,6 +97,7 @@ ignore:
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
 theme: redefine
+all_minifier: true
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment

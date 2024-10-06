@@ -196,6 +196,17 @@ navbar:
     Home: 
       path: / 
       icon: fa-regular fa-house # can be empty
+    相册:
+      icon: fa-solid fa-image
+      path: /masonry
+    友链:
+      icon: fa-solid fa-link
+      path: /links
+    关于: 
+      icons: fa-solid fa-heart
+      submenus:
+        本站: /about/blogs
+        科家: /about/kejia
     # Archives: 
     #   path: /archives 
     #   icon: fa-regular fa-archive # can be empty
@@ -251,6 +262,15 @@ home:
       友链:
         icon: fa-solid fa-link
         path: /links
+      关于: 
+        icon: fa-solid fa-heart
+        submenus:
+          本站: 
+            icon: fa-solid fa-global
+            link: /about/blogs
+          科家: 
+            icon: fa-solid fa-user
+            link: /about/kejia
       # ...... # you can add more
   # Article date format
   article_date_format: auto # auto, relative, YYYY-MM-DD, YYYY-MM-DD HH:mm:ss etc.
