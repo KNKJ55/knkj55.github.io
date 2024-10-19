@@ -15,7 +15,7 @@
   cacheDir: '/data/data/com.termux/files/home/.npminstall_tarball',
   env: {
     npm_config_registry: 'https://registry.npmmirror.com',
-    npm_config_argv: '{"remain":[],"cooked":["--fix-bug-versions","--china","--userconfig=/data/data/com.termux/files/home/.cnpmrc","--disturl=https://cdn.npmmirror.com/binaries/node","--registry=https://registry.npmmirror.com","hexo-all-minifier"],"original":["--fix-bug-versions","--china","--userconfig=/data/data/com.termux/files/home/.cnpmrc","--disturl=https://cdn.npmmirror.com/binaries/node","--registry=https://registry.npmmirror.com","hexo-all-minifier"]}',
+    npm_config_argv: '{"remain":[],"cooked":["--fix-bug-versions","--china","--userconfig=/data/data/com.termux/files/home/.cnpmrc","--disturl=https://cdn.npmmirror.com/binaries/node","--registry=https://registry.npmmirror.com","--save","hexo-all-minifier"],"original":["--fix-bug-versions","--china","--userconfig=/data/data/com.termux/files/home/.cnpmrc","--disturl=https://cdn.npmmirror.com/binaries/node","--registry=https://registry.npmmirror.com","--save","hexo-all-minifier"]}',
     npm_config_user_agent: 'npminstall/7.12.0 npm/? node/v22.8.0 android arm64',
     npm_config_cache: '/data/data/com.termux/files/home/.npminstall_tarball',
     NODE: '/data/data/com.termux/files/usr/bin/node',
