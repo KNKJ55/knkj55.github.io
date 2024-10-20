@@ -23,9 +23,9 @@ info:
 # Docs: https://redefine-docs.ohevan.com/basic/defaults
 defaults:
   # Favicon
-  favicon: /images/favicon-kn.png
+  favicon: /images/favicon-kn.svg
   # Site logo
-  logo: /images/favicon-kn.png
+  logo: /images/favicon-kn.svg
   # Site avatar
   avatar: /images/favicon-kj.jpg
 # IMAGE CONFIGURATION <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
