@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>Android内核编译不完全指南/解析</title>
+    <url>/2025/07/13/Android%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E4%B8%8D%E5%AE%8C%E5%85%A8%E6%8C%87%E5%8D%97-%E8%A7%A3%E6%9E%90/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><blockquote>
+<p>本篇文章仅个人观点，如有错误，欢迎在评论区指正</p>
+<p>文章内时间（当今，如今等）均以文章发布时间为准</p>
+<p>本篇文章介绍内容以旧版内核为主（4.4，4.9，4.19），可能存在过时内容，请仔细甄别</p>
+</blockquote>
+<ul>
+<li>随着刷机的迅速发展，人们已经不满足于用户态，而是向着内核空间进军，当今的众多项目（如KernelSU，Re:Kernel，RapidGC，SimpleLMK等）均建立在对内核的修改之上。“内核级玩机”仿佛成了一种潮流，迅速发展着。</li>
+<li>本篇文章，我将介绍Android内核（4.4，4.9，4.19等 非GKI&#x2F;GKI 1.0内核）的编译方法，顺便为部分内容做出解析。<blockquote>
+<p>玩机有风险，刷机需谨慎！</p>
+<p>由此造成的一切不良后果均由自己承担！</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="准备环境"><a href="#准备环境" class="headerlink" title="准备环境"></a>准备环境</h2><ul>
+<li>编译内核，需要一个合适的系统来编译，并在这个系统中做好编译的准备，我们称之为“准备环境”。</li>
+</ul>
+<h3 id="选择Linux"><a href="#选择Linux" class="headerlink" title="选择Linux"></a>选择Linux</h3><ul>
+<li>编译一个Linux内核，我们同样需要一个Linux环境。</li>
+<li>Linux的发行版有很多种，但主要是 Debian系（如Ubuntu，Kali等），Redhat系（如CentOS，Fedora等），Arch系（如Manjaro，BlackArch等），其中，最适合用于Linux内核编译的发行版是Ubuntu。（如果你有足够的经验或足够铁的头，也可以像我一样用ArchLinux编译（？））</li>
+<li>至于具体怎么安装Ubuntu就不提了，本篇教程也将以Ubuntu为例，介绍编译安卓内核的基本步骤。</li>
+<li>Ubuntu 建议安装 22.04 （编译旧内核足矣），如果有特殊需求（如使用SukiSU的KernelPatch）可以安装更新的版本</li>
+</ul>
+<h3 id="安装所需软件包"><a href="#安装所需软件包" class="headerlink" title="安装所需软件包"></a>安装所需软件包</h3><ul>
+<li>编译Linux内核需要安装一些软件。</li>
+<li>这里以Ubuntu 24.04为例，使用以下命令安装所需软件包:<br><code>sudo apt-get install git automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib gcc-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python3 ccache git-lfs gnupg imagemagick libelf-dev libncurses5-dev libsdl1.2-dev rsync adb fastboot libstdc++6 -y</code></li>
+</ul>
+<h2 id="工具链"><a href="#工具链" class="headerlink" title="工具链"></a>工具链</h2><ul>
+<li>编译一个Linux内核，需要一些特定的编译器。</li>
+<li>然而，由于技术的进步，时代的发展，许多新编译器已经不能很好的兼容旧Linux内核源码，所以我们就需要使用 同时代的&#x2F;特定的 编译器以保证兼容性，我们称之为工具链。</li>
+<li>以下是编译Android内核常用的几种工具链组合（均以Linux-x86为编译主机）:</li>
+</ul>
+<h3 id="Clang-GCC"><a href="#Clang-GCC" class="headerlink" title="Clang + GCC"></a>Clang + GCC</h3><p><strong>Part 1: Linux 3.x - Linux 4.4</strong></p>
+<ul>
+<li>这几个版本的Linux内核一般兼容 Clang 9 + GCC 4.9 的工具链。</li>
+<li>Clang: 可使用<a href="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/">Google Clang</a>，<a href="https://github.com/kdrag0n/proton-clang">Proton Clang</a>等，推荐使用 Clang 9 - Clang 12 等版本。</li>
+<li>GCC: 使用 <a href="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/">aarch64-linux-android-gcc</a>（来自Google），部分设备（arm架构的32位设备及部分64位设备）还需要<a href="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/">arm-linux-androideabi-gcc</a>（来自Google），版本推荐使用 4.9。也可以使用<a href="https://releases.linaro.org/components/toolchain/binaries/">Linaro GCC（aarch64-linux-gnu-gcc和arm-linux-gnueabi-gcc）</a></li>
+</ul>
+<p><strong>Part 2: Linux 4.9</strong></p>
+<ul>
+<li>这几个版本的Linux内核一般兼容 Clang 12及以上 + GCC 5.3及以上 的工具链。</li>
+<li>Clang: 可使用<a href="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/">Google Clang</a>，<a href="https://github.com/kdrag0n/proton-clang">Proton Clang</a>等，推荐使用 Clang 12及以上 版本（不要太新）。</li>
+<li>GCC: 使用aarch64-linux-gnu-gcc，部分设备（arm架构的32位设备及部分64位设备）还需要arm-linux-gnueabi-gcc，可以使用<a href="https://releases.linaro.org/components/toolchain/binaries/">Linaro GCC（aarch64-linux-gnu-gcc和arm-linux-gnueabi-gcc）</a>，推荐使用 5.3及以上 版本（不要太新）。<blockquote>
+<p>Linux 4.14 和 Linux 4.19 与 Linux 4.9 类似，但版本略新。</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="LLVM"><a href="#LLVM" class="headerlink" title="LLVM"></a>LLVM</h3><ul>
+<li>通常，使用 Linux 4.19 及以上的安卓内核支持使用LLVM编译。一般使用最新版本就好，如兼容性不佳，可尝试使用旧版本或使用 Clang + GCC 组合。</li>
+<li>LLVM: 可使用 <a href="https://android.googlesource.com/toolchain/llvm-project/">Google LLVM</a>，<a href="https://gitlab.com/ThankYouMario/android_prebuilts_clang-standalone/">Standalone LLVM</a> 等。</li>
+</ul>
+<h3 id="Python-2-（可选）"><a href="#Python-2-（可选）" class="headerlink" title="Python 2 （可选）"></a>Python 2 （可选）</h3><ul>
+<li>通常，在使用 Linux 4.19 的安卓内核需要使用Python2。然而，由于Python2生命周期的结束，在Ubuntu 23.10及以上版本的Ubuntu中，在软件源里移除了Python2。所以，在使用Ubuntu 23.10及以上版本Ubuntu的宿主机编译4.19内核时，可能需要准备Python2工具链。（如果使用Ubuntu 23.10以下版本，可以直接通过包管理器安装Python2，无需额外准备。）</li>
+<li>Python2: 可使用 <a href="https://github.com/luyanci/python-prebuilt">Python Prebuit</a></li>
+</ul>
+<h2 id="拉取内核源码及工具链"><a href="#拉取内核源码及工具链" class="headerlink" title="拉取内核源码及工具链"></a>拉取内核源码及工具链</h2><ul>
+<li>编译一个内核，必须要有源码。</li>
+<li>小米的官方源码可以在<a href="https://github.com/MiCode/Xiaomi_Kernel_OpenSource">MiCode</a>获取，且小米12之后的设备源码不全，其他厂商只公开了部分设备的源码</li>
+<li>建议使用第三方源码（如<a href="https://github.com/LineageOS/">LineageOS</a>，或其他第三方内核），可能会失去部分官方特性，但便于编译，可以少走很多弯路</li>
+<li>在你的Ubuntu中找一个有权限访问的目录，如home，然后使用以下命令拉取源码:<br><code>git clone &lt;你的源码仓库地址&gt; --depth 1</code></li>
+<li>同样在有权限访问的目录，根据上文选择合适的工具链，随后使用以下命令拉取:<br><code> git clone &lt;你的工具链仓库地址&gt; --depth 1</code></li>
+<li>当然了，获取源码和工具链的方式有很多种，不要局限于这串命令，如果不行，就换一种方法，教程是死的，可人是活的。</li>
+<li>最后记好工具链的位置，进入下一步。</li>
+</ul>
+<h2 id="编写编译脚本"><a href="#编写编译脚本" class="headerlink" title="编写编译脚本"></a>编写编译脚本</h2><ul>
+<li>编译一个内核，要设置很多环境变量。但如果在每一次编译的时候都手动设置，可就有点麻烦了。通过cd命令进入源码目录，创建一个名为“build.sh”的脚本（名字是什么无所谓，只要是.sh格式就行）。在这里，我将举例几种编译脚本:</li>
+</ul>
+<h3 id="Clang-GCC-1"><a href="#Clang-GCC-1" class="headerlink" title="Clang + GCC"></a>Clang + GCC</h3><p><strong>Part 1: Linux 4.9及以上</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">export ARCH=&quot;arm64&quot;</span><br><span class="line">export SUBARCH=&quot;arm64&quot;</span><br><span class="line">export PATH=&quot;/root/toolchain/clang/bin:/root/toolchain/gcc32/bin:/root/toolchain/gcc64/bin:$PATH&quot;</span><br><span class="line">export CC=&quot;clang&quot;</span><br><span class="line">export CROSS_COMPILE=&quot;aarch64-linux-gnu-&quot;</span><br><span class="line">export CROSS_COMPILE_ARM32=&quot;arm-linux-gnueabi-&quot;</span><br><span class="line">export TRIPLE=&quot;aarch64-linux-gnu-&quot;</span><br><span class="line">make O=out &lt;内核配置文件&gt;</span><br><span class="line">make -j$(nproc --all) O=out</span><br></pre></td></tr></table></figure>
+<ul>
+<li>这个编译脚本适用于大多数 Linux 4.9及以上 的内核。</li>
+<li>ARCH: 设备架构</li>
+<li>SUBARCH: 同上</li>
+<li>PATH: Linux主机中的PATH，在系统PATH（$PATH）设置你的工具链（拉取的编译器在工具链中的位置，通常为各工具链的bin目录）的PATH。这里只是举例，不要照搬！<blockquote>
+<p>PATH是Linux中的一个重要环境变量，linux中执行的命令（如ls，mkdir，git）等都在PATH指定的文件夹（如&#x2F;usr&#x2F;bin，&#x2F;bin）中，在这里，通过设置PATH，可以使编译程序找到编译器的位置。</p>
+<p>比如，&#x2F;root&#x2F;toolchain&#x2F;clang&#x2F;bin就是clang编译器的二进制文件所在位置，设置PATH后make可以直接调用clang</p>
+<p>同时，PATH是有先后顺序的，在这里，每个编译器的PATH不能在系统PATH（$PATH）之后，不然make会优先调用系统中的编译器，工具链就没被用到了，多个PATH之间用“:”隔开。</p>
+</blockquote>
+</li>
+<li>CC: 编译内核使用的编译器</li>
+<li>CROSS_COMPILE: 交叉编译工具链三元组<blockquote>
+<p>在上面，我们已经设置了PATH，编译程序make调用的是gcc，但我们拉取的工具链是aarch64-linux-gnu-gcc，这时为了调用aarch64-linux-gnu-gcc，将CROSS_COMPILE设置为aarch64-linux-gnu-，编译程序就会调用aarch64-linux-gnu-gcc而不是gcc了，也就是设置目标三元组。</p>
+</blockquote>
+</li>
+<li>CROSS_COMPILE_ARM32（可选）: 32位交叉编译工具链三元组<blockquote>
+<p>在部分内核上需要编译32位的东西，这时就需要设置CROSS_COMPILE_ARM32来调用之前我们准备的arm-linux-gnueabi-gcc工具链了。同CROSS_COMPILE</p>
+</blockquote>
+</li>
+<li>TRIPLE: 交叉编译工具链三元组</li>
+<li>以上是编译内核时需要设置的几个环境变量。</li>
+<li>make O&#x3D;out &lt;内核配置文件&gt;: 写入内核配置<blockquote>
+<p>编译Linux内核需要有一个配置文件。在arm64架构中，它通常在arch&#x2F;arm64&#x2F;configs&#x2F;目录下，使用这个命令也会直接调用这个目录下的配置文件。</p>
+<p>这个&lt;内核配置文件&gt;应该设置为你的机型在arch&#x2F;arm64&#x2F;configs&#x2F;目录下对应的配置文件。</p>
+<p>O&#x3D;out是设置编译输出目录。</p>
+</blockquote>
+</li>
+<li>make -j$(nproc –all) O&#x3D;out: 开始编译<blockquote>
+<p>-j$(nproc –all)是让make使用电脑所有的核心进行编译，可以提高编译速度。</p>
+</blockquote>
+</li>
+<li>其中需要手动更改的部分为PATH</li>
+</ul>
+<p><strong>Part 2: Linux 3.x - Linux 4.4</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">export ARCH=&quot;arm64&quot;</span><br><span class="line">export SUBARCH=&quot;arm64&quot;</span><br><span class="line">export PATH=&quot;/root/toolchain/clang/bin:/root/toolchain/gcc32/bin:/root/toolchain/gcc64/bin:$PATH&quot;</span><br><span class="line">export CC=&quot;clang&quot;</span><br><span class="line">export CROSS_COMPILE=&quot;aarch64-linux-android-&quot;</span><br><span class="line">export CROSS_COMPILE_ARM32=&quot;arm-linux-androideabi-&quot;</span><br><span class="line">export TRIPLE=&quot;aarch64-linux-android-&quot;</span><br><span class="line">make O=out &lt;内核配置文件&gt;</span><br><span class="line">make -j$(nproc --all) O=out</span><br></pre></td></tr></table></figure>
+<ul>
+<li>仅三元组与 Linux 4.9及以上 不同，其余一致。</li>
+</ul>
+<h3 id="LLVM-1"><a href="#LLVM-1" class="headerlink" title="LLVM"></a>LLVM</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">export ARCH=&quot;arm64&quot;</span><br><span class="line">export SUBARCH=&quot;arm64&quot;</span><br><span class="line">export PATH=&quot;/root/toolchain/llvm/bin:/root/toolchain/python2/bin:$PATH&quot;</span><br><span class="line">export CC=clang</span><br><span class="line">export LLVM=1</span><br><span class="line">export LLVM_IAS=1</span><br><span class="line">export CLANG_TRIPLE=&quot;aarch64-linux-gnu-&quot;</span><br><span class="line">export CROSS_COMPILE=&quot;aarch64-linux-gnu-&quot;</span><br><span class="line">make O=out &lt;内核配置文件&gt;</span><br><span class="line">make -j$(nproc --all) O=out</span><br></pre></td></tr></table></figure>
+<ul>
+<li>LLVM: 启用LLVM编译</li>
+<li>LLVM_IAS: 使用Clang内部编译器</li>
+<li>CLANG_TRIPLE, CROSS_COMPILE: 设置三元组<blockquote>
+<p>在4.19及以上内核中可能没什么必要（我之前设置错了，但一直没出任何问题），但不设置不行（有判断）</p>
+</blockquote>
+</li>
+<li>其他同上。</li>
+</ul>
+<h2 id="编译内核"><a href="#编译内核" class="headerlink" title="编译内核"></a>编译内核</h2><ul>
+<li>在做好了万全的准备后，我们就该开始编译内核了。</li>
+<li>cd到源码目录，执行以下命令为编译脚本赋予可执行权限:<br><code>chmod +x build.sh</code></li>
+<li>然后就要正式开始了:<br><code>bash build.sh</code></li>
+<li>如果没有意外，编译就应该通过了。<blockquote>
+<p>有意外自己修，每个源码都不一样，不可能一次性讲清，还是那句话，教程是死的，可人是活的。编译Linux也是一种学习的过程，不能都指望着别人。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="打包内核并刷入"><a href="#打包内核并刷入" class="headerlink" title="打包内核并刷入"></a>打包内核并刷入</h2><ul>
+<li>在编译通过（既没有任何报错信息）后，成品内核会生成在out&#x2F;arch&#x2F;arm64&#x2F;boot&#x2F;目录下，文件名通常为Image。<blockquote>
+<p>这个目录下部分源码只会生成Image，大部分源码还会生成Image.gz，Image-dtb，Image.gz-dtb。</p>
+<p>Image为内核成品，dtb则是设备树文件，其中存放着有关设备硬件的重要信息，Image-dtb和Image.gz-dtb等内核包含了dtb文件，打包时只需要打包Image-dtb或Image-gz-dtb即可，否则还需要打包out&#x2F;arch&#x2F;arm64&#x2F;boot&#x2F;dts&#x2F;目录下的dtb文件。</p>
+</blockquote>
+</li>
+<li>打包还需要用到<a href="https://github.com/osm0sis/AnyKernel3">Anykernel3</a>。使用以下命令拉取Anykernel3:<br><code>git clone https://github.com/osm0sis/AnyKernel3 --depth 1 anykernel3</code></li>
+<li>随后将内核复制到anykernel3目录下:</li>
+</ul>
+<blockquote>
+<p>如果生成了Image-dtb或Image.gz-dtb:</p>
+</blockquote>
+<p><code>cp out/arch/arm64/boot/Image-dtb anykernel3/</code></p>
+<ul>
+<li>或:</li>
+</ul>
+<p><code>cp out/arch/arm64/boot/Image.gz-dtb anykernel3/</code></p>
+<blockquote>
+<p>如果只生成了Image:</p>
+</blockquote>
+<p><code>cp out/arch/arm64/boot/Image anykernel3/</code><br><code>cp out/arch/arm64/boot/dts/*/*.dtb anykernel3/</code></p>
+<blockquote>
+<p>需要自己确定dtb文件的路径，每个内核都不一样。</p>
+</blockquote>
+<ul>
+<li>随后cd进入anykernel3目录，修改anykernel.sh:</li>
+<li>将do.devicecheck的值改为0，</li>
+<li>如果手机是AB或VAB分区设备，则将IS_SLOT_DEVICE改为1，如果是A-Only分区设备，则改为0。</li>
+<li>最后一步，打包。cd进anykernel3目录，执行以下命令:<br><code>zip -r anykernel3.zip *</code></li>
+<li>随后将生成的anykernel3.zip文件在Recovery模式中刷入（或使用KernelFlasher刷入）即可。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>玩机</category>
+        <category>开发</category>
+      </categories>
+      <tags>
+        <tag>Android</tag>
+        <tag>Linux</tag>
+        <tag>编译</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hello World Again!</title>
+    <url>/1970/01/01/hello-world-again/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><ul>
+<li>说起来有些漫长</li>
+<li>这几个月来都没维护博客</li>
+<li>主要是文件丢了（）</li>
+<li>得，推倒重来吧</li>
+</ul>
+]]></content>
+      <categories>
+        <category>闲谈</category>
+      </categories>
+      <tags>
+        <tag>始</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>隐藏联发科特色之解锁bl后开机时的橙色警告</title>
+    <url>/2025/07/16/%E9%9A%90%E8%97%8F%E8%81%94%E5%8F%91%E7%A7%91%E7%89%B9%E8%89%B2%E4%B9%8B%E8%A7%A3%E9%94%81bl%E5%90%8E%E5%BC%80%E6%9C%BA%E6%97%B6%E7%9A%84%E6%A9%99%E8%89%B2%E8%AD%A6%E5%91%8A/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><blockquote>
+<p>方法来自外网<a href="https://www.hovatek.com/forum/thread-31664.html">Hovatek</a>，本篇文章只介绍其中的橙色警告，如有其他需求，请移步<a href="https://www.hovatek.com/forum/thread-31664.html">Hovatek</a>，如有侵权，请联系我删除。</p>
+<p>本篇文章仅表个人观点，且设备较旧（魅蓝Max，联发科HelioP10），可能并不适用于新设备，请仔细甄别！</p>
+</blockquote>
+<h4 id="橙色警告"><a href="#橙色警告" class="headerlink" title="橙色警告"></a>橙色警告</h4><ul>
+<li>橙色警告是联发科设备特有的一种警告，在设备解锁BootLoader锁后，会在开机显示“橙色警告”的字样:<blockquote>
+<p>Orange State</p>
+<p>Your device has been unlocked and can’t be trusted<br>Your device will boot in 5 seconds</p>
+</blockquote>
+</li>
+<li>大意:<blockquote>
+<p>橙色警告</p>
+<p>你的设备已经被解锁且不可信<br>你的设备将在5秒内启动（不是真的5秒内）</p>
+</blockquote>
+</li>
+<li>这个警告会给纯净的开机界面带来一点“联发科”式震撼</li>
+<li>所以，我们要隐藏它。</li>
+</ul>
+<h4 id="隐藏方法"><a href="#隐藏方法" class="headerlink" title="隐藏方法"></a>隐藏方法</h4><ul>
+<li>原理: 修改橙色警告16进制值为0</li>
+<li>具体步骤:</li>
+</ul>
+<h5 id="提取-Bootloader-分区"><a href="#提取-Bootloader-分区" class="headerlink" title="提取 Bootloader 分区"></a>提取 Bootloader 分区</h5><ul>
+<li>通常，只需要提取Bootloader分区（lk）即可</li>
+<li>（为了保险，我测试时提取了lk和lk2两个分区分别进行修改并刷入）</li>
+<li>开机&#x2F;第三方Revovery（如twrp，ofrp等）状态下，使用以下命令提取lk分区:<br><code>dd if=/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/lk of=/sdcard/lk.img</code><blockquote>
+<p>PS: 不同设备可能略有差异，请自行排查</p>
+</blockquote>
+</li>
+<li>随后，lk便会被提取到&#x2F;sdcard&#x2F;lk.img</li>
+</ul>
+<h5 id="通过16进制编辑器修改lk分区镜像"><a href="#通过16进制编辑器修改lk分区镜像" class="headerlink" title="通过16进制编辑器修改lk分区镜像"></a>通过16进制编辑器修改lk分区镜像</h5><ul>
+<li>通过16进制编辑器修改，自然需要一个16进制编辑器，例如Windows端的Winhex，HxD等工具，我这里是用手机端MT管理器修改的。<blockquote>
+<p>下边引用的所有图片均来自<a href="https://www.hovatek.com/forum/thread-31664.html">Hovatek</a>，使用Windows端HxD工具进行演示，其他工具同理。</p>
+</blockquote>
+</li>
+<li>步骤如下:</li>
+</ul>
+<h6 id="搜索ASCII值-Orange-State"><a href="#搜索ASCII值-Orange-State" class="headerlink" title="搜索ASCII值: Orange State"></a>搜索ASCII值: Orange State</h6><p><img src="https://www.hovatek.com/blog/bpyeki/uploads/2023/11/How-to-hide-Orange-and-Red-State-warnings-on-Mediatek-devices-8.webp" alt="搜索ASCII值"></p>
+<blockquote>
+<p>来自<a href="https://www.hovatek.com/forum/thread-31664.html">Hovatek</a>，这里使用HxD演示，且演示搜索Red State</p>
+</blockquote>
+<h6 id="选中Orange-State警告并将每字均替换为0"><a href="#选中Orange-State警告并将每字均替换为0" class="headerlink" title="选中Orange State警告并将每字均替换为0"></a>选中Orange State警告并将每字均替换为0</h6><p><img src="https://www.hovatek.com/blog/bpyeki/uploads/2023/11/How-to-hide-Orange-and-Red-State-warnings-on-Mediatek-devices-11.webp" alt="选中OrangeState"><br><img src="https://www.hovatek.com/blog/bpyeki/uploads/2023/11/How-to-hide-Orange-and-Red-State-warnings-on-Mediatek-devices-12.webp" alt="替换为0"></p>
+<blockquote>
+<p>不要直接删除！<br>来自<a href="https://www.hovatek.com/forum/thread-31664.html">Hovatek</a>，这里使用HxD演示</p>
+</blockquote>
+<h6 id="搜索并找到该16进制值"><a href="#搜索并找到该16进制值" class="headerlink" title="搜索并找到该16进制值:"></a>搜索并找到该16进制值:</h6><ul>
+<li>安卓10以下: 7B441B681B68012B</li>
+<li>安卓10及以上: 7B441B681B68022B<br><img src="https://www.hovatek.com/blog/bpyeki/uploads/2023/11/How-to-remove-5-seconds-boot-delay-time-in-Orange-State-warning-on-Mediatek-devices-2.webp" alt="搜索16进制值"><blockquote>
+<p>来自<a href="https://www.hovatek.com/forum/thread-31664.html">Hovatek</a>，这里使用HxD演示</p>
+</blockquote>
+</li>
+<li>可能会找到多个值，请在其中找到该值前部8位中的前4位为08B5:<br><img src="https://www.hovatek.com/blog/bpyeki/uploads/2023/11/How-to-remove-5-seconds-boot-delay-time-in-Orange-State-warning-on-Mediatek-devices-3.webp" alt="确定该值"><blockquote>
+<p>来自<a href="https://www.hovatek.com/forum/thread-31664.html">Hovatek</a>，这里使用HxD演示</p>
+</blockquote>
+</li>
+<li>从08B5开始选中这段16进制值<br><img src="https://www.hovatek.com/blog/bpyeki/uploads/2023/11/How-to-remove-5-seconds-boot-delay-time-in-Orange-State-warning-on-Mediatek-devices-6.webp" alt="选中该值"><blockquote>
+<p>来自<a href="https://www.hovatek.com/forum/thread-31664.html">Hovatek</a>，这里使用HxD演示</p>
+</blockquote>
+</li>
+</ul>
+<h6 id="修改该值"><a href="#修改该值" class="headerlink" title="修改该值"></a>修改该值</h6><ul>
+<li>安卓10以下修改为: 08B5002008BD1B681B68012B</li>
+<li>安卓10及以上修改为: 08B5002008BD1B681B68022B<br><img src="https://www.hovatek.com/blog/bpyeki/uploads/2023/11/How-to-remove-5-seconds-boot-delay-time-in-Orange-State-warning-on-Mediatek-devices-4.webp" alt="修改该值"><blockquote>
+<p>来自<a href="https://www.hovatek.com/forum/thread-31664.html">Hovatek</a>，这里使用HxD演示</p>
+</blockquote>
+</li>
+</ul>
+<h6 id="保存"><a href="#保存" class="headerlink" title="保存"></a>保存</h6><ul>
+<li>该步不作过多解释。</li>
+</ul>
+<h5 id="刷入"><a href="#刷入" class="headerlink" title="刷入"></a>刷入</h5><ul>
+<li>在第三方Recovery模式里将修改后的lk.img直接在图形界面下刷入，通常刷入到lk分区，如果没有lk分区可尝试寻找Bootloader分区，如果也没有，请打开终端，并通过以下命令刷入:<br><code>dd if=&lt;修改后lk镜像的位置&gt; of=/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/lk</code><blockquote>
+<p>PS: 不同设备可能略有差异，请自行排查</p>
+<p>警告: 请仔细检查是否有错，否则可能导致lk分区损坏，将无法开机！</p>
+</blockquote>
+</li>
+<li>请不要在开机状态下直接刷入，在开机状态下直接刷入分区可能不会生效</li>
+</ul>
+]]></content>
+      <categories>
+        <category>玩机</category>
+      </categories>
+      <tags>
+        <tag>Android</tag>
+        <tag>联发科MediaTek</tag>
+      </tags>
+  </entry>
+</search>
